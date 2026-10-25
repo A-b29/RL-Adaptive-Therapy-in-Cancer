@@ -13,6 +13,14 @@ The RL literature on adaptive therapy uses one objective per paper, and each obj
 
 The environment is Strobl 2021's two-population Lotka–Volterra model with turnover, on Gallagher's proof-of-principle (PoP) patient. Exact reward definitions are in `experiments.ipynb` (top cell) and `decisions.md` §B.
 
+<p align="center"><img src="figures/E4_score_matrix.png" width="520" alt="E4 score matrix: every trained policy, value-iteration optimum and heuristic scored on every objective"></p>
+
+The repository holds two rounds of experiments:
+- **Main study (E0–E11d):** `experiments.ipynb`, with results in the sections below.
+- **Follow-up round (A1–E2):** [`further_expts/`](further_expts/), which adds 14 robustness and extension experiments. They are summarised [here](#follow-up-experiments-further_expts).
+
+**Contents:** [Headline findings](#headline-findings) · [Results by experiment](#results-by-experiment) · [Follow-up experiments](#follow-up-experiments-further_expts) · [How to run](#how-to-run) · [Layout](#layout) · [Limitations](#limitations)
+
 ---
 
 ## Headline findings
@@ -85,6 +93,33 @@ All numbers come from `results/summary.json`, which the notebook writes. Values 
 
 ---
 
+## Follow-up experiments (`further_expts/`)
+
+`further expts.txt` proposed a second round of experiments, which was run in [`further_expts/`](further_expts/). It trained 270 more PPO agents and added several value-iteration-only sweeps. It uses the same engine (`src/atrl.py`, extended with options that are off by default and verified bit-identical) and leaves `experiments.ipynb` and `results/` untouched. `further_expts/relevance.md` judges every proposed item against the Phase 2 plan.
+
+**Reviewer attacks that no longer hold**
+
+| Attack | Answer | Item |
+|---|---|---|
+| "The VI ceilings are coarse" | Doubling the grid moves no ceiling by > 0.4% | A3 |
+| "One parameter set" | R1 ≡ R4 and R3 last hold over the whole cost × turnover box (25 VI patients), and for PPO on a third patient (turnover 0.04) | C1, A1 |
+| "Your agents trained badly" | At 3× budget, scores reach 0.93–0.97 and divergence *grows* (R1 vs R3: 3.8× → 6.1× seed noise). R3's cost stays 0.15 with full state | A2 |
+| "It is your R3 reward maths" | Smooth entropy rewards are worse, and smooth targets cannot be held by VI either: the limit is structural | B2 |
+| "It assumes fully resistant cells" | R3's survival penalty stays ≈ 20% at every ε while the patient still progresses | E2 |
+| "Progression at 1.2 N₀ is arbitrary" | The ranking R1 = R4 > R2 > R3 holds at 1.1, 1.2 and 1.3 | B4 |
+
+**New insights**
+1. **What the policy sees bounds what the objective can do (A2).** At an equal 3M-step budget, burden + critic beats full state for every objective (p ≤ 4·10⁻⁴), and memory is weakest. With a burden-only actor the objectives nearly collapse: R3's largest cost is 0.023, against 0.154 with full state.
+2. **R2 is Pareto-efficient, not broken (B1).** All good policies lie on one drug–TTP line at ≈ 72% dose intensity. The R2 memory agents trade ≈ 285 d of TTP for ≈ 4 points of intensity.
+3. **R1 ≡ R4 depends on how a holiday is credited (D1).** Adding a half dose separates survival (2038 d) from durability (2143 d), but only because R1's holiday bonus is all-or-nothing. A dose-proportional bonus (`R1p`) recovers the R4 optimum exactly. S → R conversion (E1) gives the first genuine split at the optimum, but it is small (6 d) and agents do not find it.
+4. **Intermediate doses help the planner more than the learner (D1–D3).** Three dose levels add 70–105 d at the optimum and 68–168 d for agents. Five levels help VI further but *lower* PPO's scores. A single growth-halting dose (2/3) captures most of the gain.
+5. **Optimal schedules chatter, and can be simplified (B3, D4).** Optima and agents switch dose on ≈ 54% of weeks, against ≤ 22% for heuristics. A switching penalty halves switching for 3–8% of the benefit, and at 9 switches a year the schedule still outlasts the best heuristic by 55%.
+6. **Coexistence's cost scales with its target (B2).** A target near the containment fraction (f\* = 0.05) is nearly free (cost 0.029). Every higher target costs more, and no policy holds f above ≈ 0.12.
+
+The full tables, figures and run instructions are in [`further_expts/README.md`](further_expts/README.md).
+
+---
+
 ## How to run
 
 Requirements: Python ≥ 3.10 with `numpy scipy pandas matplotlib torch jupyter`. No GPU is needed, and no RL library either: PPO is implemented in `src/atrl.py`.
@@ -99,26 +134,34 @@ jupyter nbconvert --to notebook --execute --inplace experiments.ipynb   # or ope
 - **Caching.** Checkpoints are cached in `results/agents/`. Later runs skip training, and the full notebook re-executes in about 9 min.
 - **Retraining.** Delete a `.pkl` to retrain that run.
 - **Reproducibility.** Seeds are fixed. The config is written to `results/config.json`. Training jobs are defined once in `atrl.jobs()`.
+- **Follow-up round.** Run `python further_expts/fx.py 4` (270 jobs, about 5 h on 4 workers, resumable), then execute `further_expts/further_expts_experiments.ipynb` (about 25 min; it never trains). All checkpoints are already committed, so you can go straight to the notebook.
 
 ## Layout
 
 ```
-experiments.ipynb   E0 -> E10 in order, with a "Reading" cell after each experiment and a Findings section at the end
-src/atrl.py         environment, objectives, baselines, metrics, value iteration, PPO, analysis helpers (one module)
-results/            agents/*.pkl (checkpoints + learning curves), E4_*.csv, E4c_*.csv, E11_*.csv, E11b_*.csv, E11c_*.csv, E11d_*.csv, summary.json, config.json
-figures/            every figure the notebook draws
-decisions.md        every design choice: alternatives, reasons, sources, what would change it
-model_flow.md       the ODE, the MDP, and diagrams of how data flows to each result
-Claude Docs/        Phase 2 plan (the experiment matrix this implements), proposal, deck
-Papers/             the literature corpus; RL_Adaptive_Cancer_Therapy_Reference.md summarises it
+experiments.ipynb       main study: E0 -> E11d in order, a "Reading" cell after each experiment, Findings at the end
+src/atrl.py             environment, objectives, baselines, metrics, value iteration, PPO, analysis helpers (one module)
+results/                agents/*.pkl (checkpoints + learning curves), per-experiment score and cross-evaluation CSVs, summary.json, config.json
+figures/                every figure the main notebook draws
+decisions.md            every design choice (D1-D43): alternatives, reasons, sources, what would change it
+model_flow.md           the ODE, the MDP, and diagrams of how data flows to each result
+further expts.txt       the follow-up proposal (parts A-G) and the rules it keeps from Phase 2
+further_expts/          the follow-up round: notebook, fx.py launcher, its own results/ and figures/, decisions F0-F18, relevance.md
+Docs/                   proposal, Phase 2 plan (the experiment matrix this implements), presentation decks, literature reference
+  figures and code/     the figures used in the decks and the scripts that draw them
+Drafts/                 early draft of the research question
+References/             fetch_papers.py (downloads the open-access papers into papers/) and papers/_manifest.csv (the reading list with DOIs)
+rl_adaptive_cancer_therapy.bib   BibTeX for the reading list
 ```
+
+`Docs/RL_Adaptive_Cancer_Therapy_Reference.md` summarises the literature corpus. The paper PDFs are not in the repository, for copyright reasons. Run `cd References && python fetch_papers.py --email you@example.com` to download the open-access ones; the script lists the DOIs of the rest.
 
 ## Limitations
 
 Stated up front, following Phase 2 and Part V of the reference document:
 
 - **In silico, one model class.** Strobl's two-population, well-mixed LV model. There is no space, pharmacokinetics, mutation or plasticity, and resistance is pre-existing and binary. E10 tests only drug-mechanism misspecification.
-- **Two reference patients.** The headline matrix was computed on two patients: the PoP patient (cost 0, turnover 0) and the same patient with cost 0.42 (E3c). Both have zero turnover. E7 and E8 broaden this, but the full cross-evaluation was not repeated on turnover > 0 patients.
+- **Few reference patients.** The full PPO cross-evaluation was run on three patients: PoP (cost 0, turnover 0), cost 0.42 (E3c) and turnover 0.04 (follow-up A1). E7 and E8 broaden this, and the follow-up C1 map checks the VI optima over a 5 × 5 cost × turnover box. Patients outside that box were not tested.
 - **Oracle observation.** The main agents see the full sensitive/resistant composition, so the comparison is about objectives, not observability (decisions D7). With a burden-only policy trained through a full-state critic (E11b), the objective effect shrinks to a few percent. So the size of the headline objective differences is specific to the oracle observation.
 - **The ports are interpretations.** R2's progression penalty, R3's scaling and boundary, and R4's per-step form are our choices, not the source papers' literal rewards (decisions D11–D14). The findings are about these ports.
 - **The VI ceiling is a discretised optimum.** Agents can match or slightly exceed it where dynamics are very slow (cytostatic E10).
@@ -127,10 +170,9 @@ Stated up front, following Phase 2 and Part V of the reference document:
 ## Not done (deliberately)
 
 - Memory variants beyond E11c/E11d: an LSTM, or a longer chart (Aif uses 64 steps). More budget alone (E11d) closed the score gap but left the objective effect and the seed noise unchanged.
-- 3× budget for the full-state and memoryless agents. Only the memory agents got it (decisions D43), so cross-setting comparisons with E11d also differ in budget.
-
+- Noisy or delayed burden readings (follow-up E3). This is the recommended next step, because the follow-up A2 made observation the strongest lever in the study.
 - R5 toxicity (Gevertz 2026) and its rule-based baseline: optional in Phase 2; would add a third state dimension.
 - E6–E10 on the cost-0.42 patient. E3c showed the E3–E5 conclusions carry over unchanged, so this was not prioritised.
-- A durability objective that genuinely conflicts with survival. Neither the population nor the fraction definition does in this model (E3c, decisions D14). That would need a model mechanism that makes a large sensitive population costly, such as toxicity (R5) or burden-proportional mutation.
+- A durability objective that genuinely conflicts with survival. Neither the population nor the fraction definition does in this model (E3c, decisions D14). That would need a model mechanism that makes a large sensitive population costly, such as toxicity (R5) or burden-proportional mutation. The follow-up E1 (S → R conversion) gives the first split at the optimum, but it is small and agents do not find it.
 
 See `decisions.md` for the full reasoning behind every choice and `model_flow.md` for the data flow.
