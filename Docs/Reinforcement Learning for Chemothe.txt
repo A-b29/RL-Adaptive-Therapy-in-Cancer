@@ -1,0 +1,96 @@
+Reinforcement Learning for Chemotherapy Scheduling in a Stochastic Tumour Evolution Model.
+
+My observations and key findings:
+1. Q-learning framework for optimising chemotherapy dosing schedules in a stochastic finite-cell model of tumour evolution under drug-induced selection.
+2. Tumour volume evolves according to a separate growth equation, with expansion rate proportional to the difference between the population-averaged fitness and a fixed microenvironmental baseline. 
+3. The reward function is engineered to promote long-term coexistence among subpopulations, thereby delaying fixation of resistance by penalising population imbalance.
+3. To quantify interactions between the three cell subpopulations, a payoff matrix, M, has been built whose entries correspond to the assumed reproductive reward a cell receives at each time step, based on the other cells it encounters. Row labels reflect the cell type receiving the reward, and columns reflect its competitor. 
+
+Gemini-Summary
+
+## Key Results
+
+* The Q-learning framework successfully generated a chemotherapy scheduling policy that divides the tumour population state space into six distinct action zones, balancing specific drug applications to steer the tumour's evolutionary trajectory.
+
+
+* The learned policy effectively drives all evaluated initial tumour states toward a high-entropy target region, ensuring long-term coexistence of subpopulations and delaying the fixation of resistant clones.
+
+
+* While natural selection without chemotherapy eliminates resistance but allows unchecked volumetric tumour growth, the learned RL policy simultaneously suppresses overall tumour volume while maintaining subpopulation coexistence.
+
+
+* The model proved highly robust to uncertainties in initial tumour composition, successfully guiding over 50% of trajectories to the target even in its most sensitive regions, and 100% in regions near the simplex edges.
+
+
+* Under constraints of partial observability (infrequent clinical measurements), the optimised learned policies maintained a success rate of over 90% at short update intervals, though performance declined to roughly 40% when the state update interval was extended to 400 steps.
+
+
+* A simplified chemotherapy policy constructed using the symmetries of the learned model successfully reached the target region in idealised paths, but it proved significantly less robust than the full RL policy when faced with infrequent state observations.
+
+
+
+## Discussion & Implications
+
+* Model-free reinforcement learning can effectively discover adaptive treatment protocols that balance the dual objectives of tumour burden control and resistance suppression without requiring explicit, closed-form tumour dynamics models.
+
+
+* Utilising a Shannon entropy-based reward structure successfully promotes Eco evolutionary stability, which inherently suppresses competitive release—a phenomenon where eradicating sensitive cells allows resistant phenotypes to dominate.
+
+
+* The structure of the learned policies intuitively capitalises on symmetries in cell fitness and drug resistance, dynamically adapting to push the population toward interior, high-diversity states.
+
+
+* The resilience of the learned policies to noisy initial conditions and intermittent observation intervals suggests these mathematical approaches can accommodate realistic clinical constraints where full, real-time tumour characterisation is impossible.
+
+
+
+## Identified Gaps & Future Work
+
+* The current model operates as a proof-of-concept and intentionally excludes stochastic mutations or phenotypic switching that might occur dynamically during the chemotherapy administration window.
+
+
+* The framework assumes a strict biological cost of resistance (encoded in the payoff matrix), which is not a universal feature across all cancer types and clinical contexts.
+
+
+* The study is currently restricted to three competing subpopulations (one sensitive, two single-drug-resistant) and does not account for the emergence of doubly resistant phenotypes, which would require a higher-dimensional population simplex.
+
+
+* To achieve clinical applicability, future iterations must incorporate longitudinal, patient-specific biomarker data (e.g., circulating tumor DNA, liquid biopsies, or radiomic signatures) to handle intratumoral heterogeneity and update treatment policies in a closed-loop system.
+
+
+* The authors identify a need to integrate reinforcement learning with state estimation techniques to create scalable, higher-dimensional digital twin models that can simulate virtual tumor replicas for *in silico* treatment planning.
+
+
+
+
+
+
+
+
+
+Gallagher (2024) -> DL personalized AT
+
+- can we add some noise in the model?
+- drug here is binary not concentration. see if we can change that. maybe have different dosing levels. (i think already done: (bioRxiv 2023.03.22.533721; 2023.09.18.558136).)
+- reward function in paper: maximize TTP + bonus of holidays --> optimize this somehow? add more stuff?
+- this is an ODE model. can we do a PDE model? does the spatial arrangement of these sensitive and resistant cells matter? etc. we can also do a multi compartment model in which we can see if R:S ratio of nearby to blood vessels vs farther away or something like that matters much or not 
+-https://github.com/MathOnco/DRL_Personalized_AT
+- see if can have more inputs. currently only PSA is taken ig? see if age and gender and stage(?) and some other stuff can be taken. (Gallaher J, Strobl M, West J, Gatenby R, Zhang J, Robertson-Tessi M, et al. Intermetastatic and intrametastatic heterogeneity shapes adaptive therapy cycling dynamics. cancer research. 2023;83:2775–89.)
+- only 2 types of cells. can we have more? like lets say immune cells and then add a marker for that?
+
+
+Kiram (2026) -> partial observability
+
+- i cant think of any changes in this 
+
+Liu (2026) -> multiscale model
+
+- except of just 2 drugs. we can let the model choose from 100s of drugs available?
+
+
+
+
+
+
+
+

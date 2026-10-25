@@ -1,0 +1,497 @@
+PHASE 3 - WHAT COMES AFTER E0-E11d
+What should adaptive therapy optimise? Follow-up experiments
+
+==========================================================================
+HOW TO READ THIS DOCUMENT
+==========================================================================
+
+Phase 2 was the plan. Phase 3 (as implemented so far) is E0-E11d. This
+document lists what to do next, and why, in six parts:
+
+  A. Reducing limitations    - fix weak points in the CURRENT claims.
+                               No new science, just a stronger foundation.
+  B. Reward and analysis     - stress-test the interpretation of the
+     checks                    existing results. No change to the tumour model.
+  C. Mapping the parameter   - find WHERE the findings hold, not just
+     space                     whether they hold on two reference patients.
+  D. Changing the action     - the three-dose extension and its follow-ups.
+     space
+  E. Changing the biology    - challenge the model's assumptions directly.
+     or the observations
+  F. Out of scope            - things to state as limitations, not build.
+
+  G. Suggested order, and the "1-2 changes" budget.
+
+Rules that carry over from Phase 2 and must not be broken:
+  1. Change one thing at a time.
+  2. Every objective is trained with the same algorithm, architecture,
+     step budget and seed set. No per-objective tuning.
+  3. Whenever the environment or the action space changes, re-solve value
+     iteration (VI) for that environment and score agents against the
+     MATCHING ceiling. Never compare a new PPO score to an old VI ceiling.
+  4. Ten seeds per objective, with within-objective spread as the noise
+     floor. Agents below 0.7 of their own ceiling count as "did not train".
+  5. Anything that changes the ODE or the action space invalidates earlier
+     runs for that comparison. Keep the old results as the baseline and
+     report the new environment as a separate experiment.
+
+Environment-changing experiments are tagged [ENV]. Experiments that only
+change reward code are tagged [REWARD], analysis only [ANALYSIS], and
+observation only [OBS]. Difficulty and compute figures are rough estimates
+based on the README (about 2-3 min per 10^6 PPO steps per core, 6 workers).
+
+
+==========================================================================
+PART A - REDUCING LIMITATIONS
+==========================================================================
+
+Goal: close the weakest points in the current claims, without changing the
+environment. These are the cheapest and give the most defence against a
+reviewer.
+
+--------------------------------------------------------------------------
+A1. Repeat E3-E5 on a patient with turnover > 0                  [CONFIG]
+--------------------------------------------------------------------------
+Limitation addressed: the headline cross-evaluation was computed on two
+patients (PoP, and PoP with cost 0.42), BOTH with turnover = 0. E7 and E8
+broaden this, but the full matrix was never repeated with turnover > 0.
+
+What to do:
+  - Pick one patient with turnover > 0, keeping turnover <= 0.04 so the
+    patient stays below Strobl's controllability bound (D27) and still
+    progresses. Optionally pick a second with both cost and turnover > 0.
+  - Re-tune baselines, re-solve VI per objective, train 10 seeds per
+    objective with the identical PPO configuration, and run the same
+    analysis functions (score_matrix, policy_space etc. - D38).
+
+Why: it shows whether "R1 = R4, R3 last" is a property of the model class
+or an artefact of zero turnover. Turnover changes whether the resistant
+population can shrink at all (its per-capita rate is r_R(1 - N/K) - d_T),
+so this is where a real change in behaviour would first appear.
+
+Watch out for: patients near the bound can reach the 30-year cap, and VI
+is stationary with no cap (D6). VI ceilings are only valid where the cap
+is not reached. Choose turnover so the patient progresses under MTD.
+
+Effort: small. Roughly one hour of compute plus analysis.
+
+--------------------------------------------------------------------------
+A2. Give every observation setting the same 3x budget            [CONFIG]
+--------------------------------------------------------------------------
+Limitation addressed: only the memory agents (E11d) got 3x10^6 steps
+(D43). So comparisons between E11d and the full-state (E3) or burden-only
+(E11b) agents differ in budget as well as in observation. D41 also notes
+the full-state agents' ~15% gap to VI may be learning inefficiency
+rather than missing information.
+
+What to do: retrain the full-state (E3) and burden-only (E11b) agents for
+all four objectives and 10 seeds at 3x10^6 steps. Keep the 1M versions.
+
+Why: it separates "the agent lacks information" from "the agent has not
+finished learning", and it directly tests the finding that burden-only
+agents BEAT full-state agents.
+
+Effort: about 80 runs, roughly 2 hours on 6 workers.
+
+--------------------------------------------------------------------------
+A3. Refine the VI grid and check the ceilings                    [CONFIG]
+--------------------------------------------------------------------------
+Limitation addressed: VI is a discretised optimum, not an exact one
+(D17: 161 burden levels x 241 log-fractions).
+
+What to do: double the grid in each dimension, re-solve all four
+objectives, and confirm the ceilings (R1 2038, R2 2030, R3 1625, R4 2038 d)
+move by less than 1%.
+
+Why: every score is expressed as a fraction of these ceilings, so their
+accuracy underpins the whole results table. This takes seconds to minutes.
+
+--------------------------------------------------------------------------
+A4. Fix the E9 confound: equal simulated days per cadence        [CONFIG]
+--------------------------------------------------------------------------
+Limitation addressed: in E9 every cadence gets 10^6 steps, so daily agents
+see 7x fewer simulated days than weekly agents (D29). No daily-trained
+agent reached 0.7 of its optimum, and this confound is the likely cause.
+
+What to do: give the daily-trained agents about 7x the steps (about
+7x10^6), so simulated days are matched.
+
+Why: it turns "daily agents failed" from a possible budget artefact into a
+real result. Worth doing only if cadence is part of the headline story.
+It is the most expensive item in this part.
+
+--------------------------------------------------------------------------
+A5. (Optional) Rerun E6-E10 on the cost-0.42 patient
+--------------------------------------------------------------------------
+E3c showed the E3-E5 conclusions carry over, so this is low priority.
+Do it only if there is time left over.
+
+
+==========================================================================
+PART B - REWARD AND ANALYSIS CHECKS (no change to the tumour model)
+==========================================================================
+
+--------------------------------------------------------------------------
+B1. Pareto-frontier analysis of all policies             [ANALYSIS]
+--------------------------------------------------------------------------
+Difficulty: very easy. No retraining.
+
+What to do: plot every trained agent, VI policy and baseline on
+  x = cumulative drug (or % of MTD dose),  y = time to progression.
+Mark the Pareto-dominated points (another policy gives at least as much
+TTP with no more drug, and strictly better on one). Treat the resistant
+fraction as a third criterion in a SEPARATE plot, not a combined score.
+
+Why: scalar rewards and TTP alone hide trade-offs. It tests whether the
+policy with the highest reward is actually a good trade-off. It is
+particularly interesting for R2, whose trained agents did not beat
+survival-trained agents even on R2's own objective (E11c, E11d).
+
+Notes: greedy evaluation gives one trajectory per agent per patient (D21),
+so also use the stochastic rollouts to show spread. Report medians and
+distributions, never means alone.
+
+--------------------------------------------------------------------------
+B2. Does the coexistence (R3) result survive a different reward  [REWARD]
+    function?
+--------------------------------------------------------------------------
+Difficulty: easy. Only R3 agents need retraining.
+
+Current R3 (D12): +0.1 inside a very narrow band around 50:50, -0.1 near
+the boundaries, 0 elsewhere, and a progression penalty. That is almost
+flat and discontinuous, so PPO gets little signal until it lands in the
+band.
+
+Compare three versions of R3:
+  (a) the existing threshold-based reward;
+  (b) a smooth entropy reward that rises gradually as the mix balances;
+  (c) a smooth target-distance reward that rises as f approaches a
+      specified resistant fraction f*.
+Keep the progression penalty and per-step scale (about 0.1) comparable.
+Note that E6 already swept f* with the BAND reward; (c) is the smooth
+analogue.
+
+Why: the question is whether coexistence is genuinely a poor objective in
+this model, or whether this particular maths is hard for PPO.
+  - If smooth R3 does much better, the "R3 is last" conclusion needs
+    refining.
+  - If it still does badly AND VI predicts the same limit, the evidence
+    for a structural problem is much stronger. (The VI ceiling for R3
+    must be re-solved for each reward shape.)
+
+--------------------------------------------------------------------------
+B3. Measure how often policies switch dose              [ANALYSIS]
+--------------------------------------------------------------------------
+Before building any switching penalty (E3 below), count dose switches per
+episode in the existing agents, VI policies and baselines. If switching is
+already rare, a switching-penalty experiment is not worth running.
+
+--------------------------------------------------------------------------
+B4. Sensitivity of the progression threshold            [ENV-lite]
+--------------------------------------------------------------------------
+Difficulty: easy. Config plus retraining.
+
+The episode ends at N >= 1.2 N0. That is a convention, not a biological
+law. Repeat the core comparison at 1.1 N0, 1.2 N0 and 1.3 N0: re-solve VI,
+retrain agents against each environment, compare the objective ranking.
+
+Why: it checks whether "R3 performs poorly" depends on where the line
+between acceptable containment and progression is drawn. This is a
+sensitivity analysis of the whole control problem, not a rescaling of TTP.
+
+Watch out for:
+  - The VI burden grid currently spans [0.02, 1.2] N0 (D17) and must be
+    extended to cover 1.3 N0.
+  - With n0 = 0.75, 1.3 N0 = 0.975 K, so the tumour only approaches the
+    threshold slowly (carrying capacity is K = 1). Do not go much higher.
+  - The E0 reproduction numbers (CT 451.6 d, AT50 662.8 d) apply only to
+    the 1.2 threshold.
+
+
+==========================================================================
+PART C - MAPPING THE PARAMETER SPACE
+==========================================================================
+
+--------------------------------------------------------------------------
+C1. Resistance-cost x turnover map: where do R1 and R4 stop     [CONFIG]
+    being equivalent?
+--------------------------------------------------------------------------
+Difficulty: easy to moderate.
+
+Currently R1 = R4 is shown on two patients. Replace "they coincide for two
+patients" with "they coincide in this region of parameter space".
+
+What to do:
+  1. Build a coarse grid over resistance cost and turnover (Strobl's and
+     Gallagher's own parameter space, so it is comparable to Gallagher's
+     Fig 5c). Keep every patient below the controllability bound.
+  2. At each grid point, solve VI for R1-R4 (seconds each).
+  3. Compare the policies and the cross-objective scores from VI alone.
+  4. Train PPO agents only at a few selected, interesting points.
+
+Heatmaps to produce: where VI-R1 and VI-R4 differ; where coexistence
+becomes controllable; where R3's performance penalty is largest.
+
+Why: this identifies the biological conditions under which the objectives
+coincide. It also gives a principled way to choose which patients to
+train on, and covers A1 as a special case.
+
+Watch out for: VI ceilings are valid only where the 30-year cap is not
+reached (D6). R3's ceiling depends on f* in the target variants.
+
+
+==========================================================================
+PART D - CHANGING THE ACTION SPACE
+==========================================================================
+
+--------------------------------------------------------------------------
+D1. Three-dose treatment (0, 0.5, 1.0)                          [ENV]
+--------------------------------------------------------------------------
+Difficulty: moderate. The main planned system change.
+
+Can the same ODE be used? Yes. The drug term is (1 - d_D * D) with
+D in [0, 1], so D = 0.5 is already valid. Only the action set changes:
+  - VI: 2 actions become 3 (trivial; still seconds).
+  - PPO: the Bernoulli policy becomes a categorical over 3 doses.
+  - Analysis code: the sigmoid N*, KL divergence and disagreement rate
+    assume P(treat) is a single number. Redefine them over 3 outcomes,
+    e.g. P(D > 0) or expected dose. This is the fiddliest step.
+
+A useful property of the model: the kill factor (1 - 1.5 D) is zero at
+D = 2/3, so D = 0.5 SLOWS sensitive growth (factor 0.25) but never
+reverses it, while D = 1 shrinks the sensitive population. Consider also
+{0, 0.67, 1} as a variant.
+
+Hypotheses (to test, not assumed):
+  H1. Low dose improves containment: a low dose can slow growth enough to
+      delay progression without suppressing sensitive cells as strongly as
+      the full dose. In this model the only possible advantage is finer
+      control near the containment boundary, because nothing penalises
+      high dose except R2 (there is no toxicity or PK).
+  H2. The objectives become more similar: R1, R2 and R4 use low doses near
+      the containment boundary. Or the extra flexibility exposes new
+      differences between them.
+  H3. Coexistence becomes easier to control: R3 regulates S and R more
+      subtly. Extra actions cannot overcome a biological limit that makes
+      the target uncontrollable (E6b).
+
+Stages:
+  Stage 1 - validate the doses. Simulate one initial tumour under constant
+            D = 0, 0.5, 1.0. Plot N, S and R. Confirm the solver is stable
+            and the trajectories make biological sense.
+  Stage 2 - extend VI. Add the third action and re-solve R1-R4. This shows
+            whether the extra action can improve the model-based optimum
+            before spending any time on neural networks.
+            SANITY CHECK: the 3-action VI ceiling must be >= the 2-action
+            ceiling (it is a superset of actions). If it is lower by more
+            than the grid error, something is wrong.
+  Stage 3 - update PPO. Categorical policy over 3 doses; update reward and
+            policy-analysis code; run a small pilot of seeds to confirm
+            learning.
+  Stage 4 - repeat the central comparison. All four objectives, 10 seeds,
+            every agent on every objective. Compare TTP, cumulative dose,
+            resistant fraction, policy differences and distance from each
+            objective's OWN new optimum.
+
+Design decisions to make explicitly:
+  - Do NOT add per-objective dose weights in the first pass. R2 already
+    uses D directly, so it handles 0.5 without change. Weight tuning
+    risks loopholes like the D14 "give up early" one and breaks the clean
+    cross-evaluation.
+  - Does D = 0.5 earn R1's holiday bonus? Faithful choice: only D = 0
+    does. A proportional bonus is a reasonable variant.
+  - A 3-action PPO may train worse at a fixed budget; use the 0.7 rule.
+
+--------------------------------------------------------------------------
+D2. Action granularity: 2 vs 3 vs 5 levels                       [ENV]
+--------------------------------------------------------------------------
+Difficulty: moderate. Extends D1 into a controlled comparison.
+
+  Binary      {0, 1.0}
+  Three-level {0, 0.5, 1.0}
+  Five-level  {0, 0.25, 0.5, 0.75, 1.0}
+
+Keep the ODE, maximum dose and decision interval identical. The action
+sets are nested, so the VI ceilings must be monotone non-decreasing.
+
+Compare: VI optimum, PPO performance, total drug exposure, number of
+treatment switches, and whether the four objectives still learn similar
+policies.
+
+Why: it separates two effects that pull in opposite directions. A finer
+action space gives the planner more flexibility, but it makes the choice
+harder for PPO. More levels are NOT assumed to be better.
+
+--------------------------------------------------------------------------
+D3. Non-linear dose-response                                    [ENV]
+--------------------------------------------------------------------------
+Difficulty: moderate. Do this AFTER D1.
+
+Replace the linear drug effect with a saturating curve (for example a Hill
+function) in which most of the effect is reached at low dose, and
+optionally a curve in which low doses do little. Keep the effect at
+maximum dose FIXED so the comparison is fair.
+
+Why: any apparent benefit of intermediate dosing in D1 could depend
+entirely on how the equations map dose to effect. Note that with only
+binary actions {0, 1} the curve shape is irrelevant, so this experiment is
+meaningful only together with three or more dose levels.
+
+Treat alternative curves as sensitivity analyses, not calibrated models,
+unless data exists to fit them.
+
+--------------------------------------------------------------------------
+D4. Penalise frequent dose changes                      [REWARD + OBS]
+--------------------------------------------------------------------------
+Difficulty: moderate. Do after B3 and D1.
+
+Modified reward: r'_t = r_t - lambda * 1[D_t != D_{t-1}].
+The previous dose must be part of the observed state, and VI must include
+it too (the state grid is replicated once per previous action; still
+cheap).
+
+Why: with three or more doses an agent may jump between levels in a way
+that is mathematically fine but impractical. The question is whether a
+schedule can be simplified a lot while keeping nearly all of its
+effectiveness. First run B3; if switching is already rare, skip this.
+
+
+==========================================================================
+PART E - CHANGING THE BIOLOGY OR THE OBSERVATIONS
+==========================================================================
+
+--------------------------------------------------------------------------
+E1. Sensitive-to-resistant conversion (emergence of resistance)   [ENV]
+--------------------------------------------------------------------------
+Difficulty: easy to moderate. Two ODE terms; state stays two-dimensional.
+
+Add a conversion at rate mu per day:
+    dS/dt |conv = -mu * S
+    dR/dt |conv = +mu * S
+Cells are transferred, not created. Start with a constant hypothetical mu,
+and later test a treatment-dependent rate.
+
+Question: does containment remain optimal when keeping a large sensitive
+population also keeps feeding new resistant cells?
+
+Why: your README names mutation pressure as one of the mechanisms that
+could make durability genuinely conflict with survival. This directly
+tests it, and is the most likely route to R4 separating from R1.
+
+Watch out for: atrl.py's self-check asserts that the resistant fraction
+never rises untreated (D14). With mu > 0 that no longer holds and the
+assertion, plus the argument for D14's reward design, must be revisited.
+The initial resistant fraction (0.001) now interacts with mu.
+
+--------------------------------------------------------------------------
+E2. Partially drug-sensitive resistant cells                     [ENV]
+--------------------------------------------------------------------------
+Difficulty: easy. One ODE term and a parameter sweep.
+
+Currently resistant cells are completely unaffected by the drug. Apply a
+multiplier (1 - eps * d_D * D) to the resistant growth term; eps = 0
+recovers the original model. Sweep small positive eps.
+
+Question: is coexistence underperforming because the objective is
+problematic, or because the resistant population cannot be controlled
+directly in this model? If R3 improves as eps grows, the original result
+depends on the assumption of complete resistance.
+
+Keep eps small enough that resistant cells stay meaningfully less
+sensitive than sensitive cells. Note (1 - 1.5 * eps) is zero at eps = 2/3,
+so keep eps well below that. Per D31, R rises under every policy for
+progressing patients; eps > 0 is what lets the drug reverse that.
+
+--------------------------------------------------------------------------
+E3. Noisy or delayed tumour measurements                         [OBS]
+--------------------------------------------------------------------------
+Difficulty: easy to moderate. Observation code only.
+
+Compare: accurate current readings; noisy burden readings; delayed
+readings (the agent acts on last week's value); then noise + delay
+combined. Start with noise alone, then delay alone, to separate causes.
+
+Question: does the containment policy depend on precise knowledge of the
+current burden, or is it robust to realistic monitoring uncertainty?
+Also measure how often the tumour crosses the progression threshold
+before the agent gets another chance to respond, and whether R1-R4 become
+more or less distinguishable.
+
+Build on the E11b setup (burden-only actor, full-state critic), since
+memoryless burden-only agents without it do not train (E11).
+
+--------------------------------------------------------------------------
+E4. Let the agent choose when to measure again                  [ENV/MDP]
+--------------------------------------------------------------------------
+Difficulty: moderate to high. Do last, after D1.
+
+The agent chooses a dose AND the time to its next observation (for
+example 1, 7 or 28 days). The reward and discounting must use actual
+elapsed time (gamma_Delta = 0.999^(Delta/7) already does this in E9).
+
+Question: can it learn to measure often near the danger zone and rarely
+when the tumour is safely contained? This follows from E9's finding that
+policies fail if monitored less often than trained.
+
+It changes the time structure of the MDP, so it is the most invasive
+experiment here. Treat it as optional.
+
+
+==========================================================================
+PART F - OUT OF SCOPE (state as limitations, do not build)
+==========================================================================
+
+  - R5 toxicity (Gevertz 2026) and its rule-based baseline. Adds a third
+    state variable and a 3-D VI grid. It is also the main way to get a
+    durability objective that genuinely conflicts with survival, so state
+    it clearly as future work.
+  - Spatial structure, pharmacokinetics, immune cells, and a third cell
+    population. Each changes the environment (see rule 5 above) and none
+    is attached to a specific question here.
+  - Plasticity (resistance that reverses). Named as the next modelling
+    step; E1 (conversion) is the closest cheap approximation.
+  - An LSTM or a longer chart (Aif uses 64 steps). Phase 2 warns that
+    doing this without a new question is replication.
+  - Swapping the RL algorithm. The algorithm is not the contribution.
+  - Any clinical claim. This is an in-silico proof of concept.
+
+
+==========================================================================
+PART G - SUGGESTED ORDER AND THE "1-2 CHANGES" BUDGET
+==========================================================================
+
+Experiments that do not change the tumour model or the action space cost
+nothing against the budget: A1-A4, B1-B3, C1, E3.
+
+Experiments that change the system (budget: 1-2):
+  [ENV]  D1/D2  three-dose or multi-level actions    <- main change
+  [ENV]  E1 or E2  conversion OR partial sensitivity <- optional second
+  [ENV]  B4 progression threshold, D3 dose-response, D4 switching penalty,
+         E4 variable monitoring                       <- not now
+
+Suggested sequence:
+
+  1. B1  Pareto frontier. Existing results only; fastest win.
+  2. B2  R3 reward stress test. Is the flagship result about the objective
+         or about its implementation?
+  3. A1 + A2 + A3  Fix the weakest limitations (turnover patient, equal
+         3x budget, VI grid check).
+  4. C1  Resistance-cost x turnover map, using VI to find where to train.
+  5. D1  Three-dose experiment (Stages 1-4), with B3 first and D2
+         (five levels) if time allows.
+  6. E1  Sensitive-to-resistant conversion, as the second system change.
+         (E2 is the alternative if conversion proves awkward.)
+  7. Later, only if time: D3, D4, E3, B4, A4, E4.
+
+Principle: change one thing at a time, establish the result with VI where
+possible, then use PPO to test whether a learned agent can reproduce it.
+Together B2, C1 and E1 establish whether the main conclusion is driven by
+the objective's mathematical form, the region of parameter space explored,
+or the underlying tumour dynamics.
+
+Note: the two recent studies mentioned in the source material (a 2025
+study on adaptive scheduling with continuous vs switching dosing, and a
+2026 study on adapting treatment windows under fixed monitoring cycles)
+were not verified here. Check them before citing. They would support the
+relevance of dose and timing experiments but do not show that any of
+these extensions is novel.

@@ -1,0 +1,40 @@
+key,section,title,doi,downloaded,doi_link
+01_gatenby2009_adaptive_therapy,1-foundations,Adaptive Therapy,10.1158/0008-5472.CAN-08-3658,FALSE,https://doi.org/10.1158/0008-5472.CAN-08-3658
+02_enriquez-navas2016_breast_preclinical,1-foundations,Exploiting evolutionary principles to prolong tumor control in preclinical models of breast cancer,10.1126/scitranslmed.aad7842,FALSE,https://doi.org/10.1126/scitranslmed.aad7842
+03_zhang2017_mcrpc_abiraterone,1-foundations,Integrating evolutionary dynamics into treatment of metastatic castrate-resistant prostate cancer,10.1038/s41467-017-01968-5,TRUE,https://doi.org/10.1038/s41467-017-01968-5
+04_zhang2022_elife_abiraterone,1-foundations,Evolution-based mathematical models significantly prolong response to abiraterone in mCRPC,10.7554/eLife.76284,TRUE,https://doi.org/10.7554/eLife.76284
+05a_mistry2021_critique,1-foundations,On the reporting and analysis of a cancer evolutionary adaptive dosing trial,10.1038/s41467-020-20174-4,TRUE,https://doi.org/10.1038/s41467-020-20174-4
+05b_zhang2021_response_to_mistry,1-foundations,Response to Mistry,10.1038/s41467-020-20175-3,TRUE,https://doi.org/10.1038/s41467-020-20175-3
+06_viossat2021_tumour_containment,1-foundations,A theoretical analysis of tumour containment,10.1038/s41559-021-01428-w,FALSE,https://doi.org/10.1038/s41559-021-01428-w
+07_strobl2021_turnover_cost_of_resistance,1-foundations,Turnover modulates the need for a cost of resistance in adaptive therapy,10.1158/0008-5472.CAN-20-0806,FALSE,https://doi.org/10.1158/0008-5472.CAN-20-0806
+08_kaznatcheev2019_fibroblasts_alectinib,1-foundations,Fibroblasts and alectinib switch the evolutionary games played by non-small cell lung cancer,10.1038/s41559-018-0768-z,TRUE,https://doi.org/10.1038/s41559-018-0768-z
+09_west2023_open_questions,1-foundations,A survey of open questions in adaptive therapy,10.7554/eLife.84263,TRUE,https://doi.org/10.7554/eLife.84263
+10_gluzman2020_dp_egt,2-optimal-control,Optimizing adaptive cancer therapy: dynamic programming and evolutionary game theory,10.1098/rspb.2019.2454,TRUE,https://doi.org/10.1098/rspb.2019.2454
+11_wang2024_threshold_awareness,2-optimal-control,Threshold-awareness in adaptive cancer therapy,10.1371/journal.pcbi.1012165,TRUE,https://doi.org/10.1371/journal.pcbi.1012165
+12a_cunningham2018_optimal_control_mcrpc,2-optimal-control,Optimal control to develop therapeutic strategies for metastatic castrate resistant prostate cancer,10.1016/j.jtbi.2018.09.022,FALSE,https://doi.org/10.1016/j.jtbi.2018.09.022
+12b_cunningham2020_eco_evo_stability,2-optimal-control,Optimal control to reach eco-evolutionary stability in metastatic castrate-resistant prostate cancer,10.1371/journal.pone.0243386,TRUE,https://doi.org/10.1371/journal.pone.0243386
+13_west2020_multidrug_adaptive,2-optimal-control,Towards multidrug adaptive therapy,10.1158/0008-5472.CAN-19-2669,FALSE,https://doi.org/10.1158/0008-5472.CAN-19-2669
+14_npj2026_multidrug_optimal_control,2-optimal-control,Optimal control theory as a method for designing multidrug adaptive therapy regimens,10.1038/s41540-025-00613-y,TRUE,https://doi.org/10.1038/s41540-025-00613-y
+15_engelhardt2020_celludose,3-core-rl,Dynamic Control of Stochastic Evolution: A DRL Approach to Adaptively Targeting Emergent Drug Resistance,,TRUE,
+16_gallagher2023_learning_to_adapt_preprint,3-core-rl,Learning to Adapt - Deep Reinforcement Learning in Treatment-Resistant Prostate Cancer,10.1101/2023.04.28.538766,TRUE,https://doi.org/10.1101/2023.04.28.538766
+17_gallagher2024_model_driven_dl,3-core-rl,Mathematical Model-Driven Deep Learning Enables Personalized Adaptive Therapy,10.1158/0008-5472.CAN-23-2040,FALSE,https://doi.org/10.1158/0008-5472.CAN-23-2040
+18_weaver2024_rl_antibiotic_resistance,3-core-rl,Reinforcement learning informs optimal treatment strategies to limit antibiotic resistance,10.1073/pnas.2303165121,TRUE,https://doi.org/10.1073/pnas.2303165121
+19_king_fitness_seascapes,3-core-rl,Fitness seascapes are necessary for realistic modeling of the evolutionary response to drug therapy,10.1126/sciadv.adv1268,FALSE,https://doi.org/10.1126/sciadv.adv1268
+20_reinforcement_failing_2025,3-core-rl,Reinforcement Failing guides the discovery of emergent physical dynamics in adaptive tumor therapy,10.1101/2025.04.08.647768,TRUE,https://doi.org/10.1101/2025.04.08.647768
+21_m4rl_glioblastoma_sciadv,3-core-rl,Multiscale mathematical model-informed RL optimizes combination treatment scheduling in glioblastoma,10.1126/sciadv.adv3316,FALSE,https://doi.org/10.1126/sciadv.adv3316
+22_single_threshold_partial_cycle,3-core-rl,Single-threshold-guided adaptive cancer therapy with partial-cycle treatment,,FALSE,
+23_memory_driven_rl_prostate,3-core-rl,A memory-driven reinforcement learning model of phenotypic adaptation ... prostate cancer,10.1101/2025.11.03.686133,FALSE,https://doi.org/10.1101/2025.11.03.686133
+24_stackelberg_breast_rl,3-core-rl,RL-Driven Evolutionary Stackelberg Game Model for Adaptive Breast Cancer Therapy,10.3390/mca30060134,FALSE,https://doi.org/10.3390/mca30060134
+25_physrev_e_qlearning_stochastic_tumor,3-core-rl,Reinforcement learning for chemotherapy scheduling in a stochastic tumor evolution model,10.1103/cbkw-5s4b,FALSE,https://doi.org/10.1103/cbkw-5s4b
+25b_optimal_adaptive_egt_plosone,3-core-rl,Optimal adaptive cancer therapy based on evolutionary game theory,10.1371/journal.pone.0320677,TRUE,https://doi.org/10.1371/journal.pone.0320677
+26_padmanabhan2017_rl_drug_dosing,4-rl-dosing,Reinforcement learning-based control of drug dosing for cancer chemotherapy treatment,10.1016/j.mbs.2017.08.004,FALSE,https://doi.org/10.1016/j.mbs.2017.08.004
+27_eastman2021_robust_schedules,4-rl-dosing,Reinforcement learning derived chemotherapeutic schedules for robust patient-specific therapy,10.1038/s41598-021-97028-6,TRUE,https://doi.org/10.1038/s41598-021-97028-6
+28_kiram2026_recurrent_drl_pomdp,4-rl-dosing,Recurrent Deep Reinforcement Learning for Chemotherapy Control under Partial Observability,,TRUE,
+29_tordesillas2019_dqn_ddpg_vs_oc,4-rl-dosing,Personalized Cancer Chemotherapy Schedule: model-based vs model-free scheduling,,TRUE,
+30_socr_offline_rl_chemo,4-rl-dosing,Supervised Optimal Chemotherapy Regimen Based on Offline Reinforcement Learning,10.1109/JBHI.2022.3183854,FALSE,https://doi.org/10.1109/JBHI.2022.3183854
+30b_drl_chemo_drug_dose_control,4-rl-dosing,Deep reinforcement learning-based control of chemo-drug dose in cancer treatment,10.1016/j.cmpb.2023.107884,FALSE,https://doi.org/10.1016/j.cmpb.2023.107884
+31_tseng2017_drl_radiation_adaptation,5-adjacent,Deep reinforcement learning for automated radiation adaptation in lung cancer,10.1002/mp.12625,FALSE,https://doi.org/10.1002/mp.12625
+31b_niraula_quantum_drl_radiotherapy,5-adjacent,Quantum deep reinforcement learning for clinical decision support in oncology: adaptive radiotherapy,10.1038/s41598-021-02910-y,TRUE,https://doi.org/10.1038/s41598-021-02910-y
+32_ici_drl_time_modeling,5-adjacent,Optimized patient-specific immune checkpoint inhibitor therapies based on TIME modeling,10.1093/bib/bbae547,TRUE,https://doi.org/10.1093/bib/bbae547
+33_abm_csc_rl_radiotherapy,5-adjacent,A biologically constrained agent-based model of cancer stem cell dynamics with RL-guided adaptive radiotherapy,10.1371/journal.pone.0340426,TRUE,https://doi.org/10.1371/journal.pone.0340426
+33b_ddpg_tumor_immune,5-adjacent,Deep learning for adaptive chemotherapy: a DDPG-based approach to optimizing tumor-immune dynamics,10.1371/journal.pone.0345877,TRUE,https://doi.org/10.1371/journal.pone.0345877
